@@ -18,7 +18,7 @@ Hello and welcome to the course!
 We are going to cover a lot of material on analysis of transcripts of individual cells in two formats, single-cell/nucleus and spatial transcriptomics. The concepts are hopefully generalizable to more types of data, depending on their format. In particular the Giotto object for spatial transcriptomics is already constructed for multiple types of spatial molecules beyond RNA.
 
 
-This course assumes you have a working knowledge of R, but will remove the more complex aspects of deploying these analyses at scale (multithreading, gpus, batch scheduling, etc). For the most part we will rely on two R concepts to work efficiently: piping steps together with `%>%` and running functions on lists using `lapply`. Additionally, it makes use of the `data.table` object which is a much faster implementation of a data.frame with built in data processing features. 
+This course assumes you have a working knowledge of R, but will remove the more complex aspects of deploying these analyses at scale (multithreading, gpus, batch scheduling, etc). For the most part we will rely on two R concepts to work efficiently: piping steps together with `|>` and running functions on lists using `lapply`. Additionally, it makes use of the `data.table` object which is a much faster implementation of a data.frame with built in data processing features. 
 
 
 Also note that many of the concepts here have analgous implementations in python in formats such as [Scanpy](https://scanpy.readthedocs.io/) and [Squidpy](https://squidpy.readthedocs.io/). 
@@ -35,10 +35,11 @@ knitr::opts_chunk$set(
 
 # packages to load
 library(Seurat) # uses presto, MAST, and DESeq2
+library(presto)
+library(future) # should be installed by Seurat
 library(ggplot2)
 library(ggrepel)
 library(data.table)
-library(future) # should be installed by Seurat
 library(Giotto)
 library(patchwork)
 library(RobustRankAggreg)
@@ -46,9 +47,9 @@ library(limma)
 # library(liana)
 
 # we will be working out of the data folder
-# data_path <- ("/sbgenomics/projects/asliuyar/asliuyar/ad-omics/data/2_sc_spatial_Butler")
-data_path <- getwd()
-cavatica <- FALSE
+data_path <- ("/sbgenomics/project-files/sc-spatial/2_sc_spatial_Butler")
+# data_path <- getwd()
+cavatica <- TRUE
 
 # little bit of prep
 if (cavatica) installGiottoEnvironment()
@@ -118,7 +119,7 @@ resi <- 0.8
 
 
 ## Clean and Analyze
-The bulk of the processing can be done in rapid succession, with linking `%>%` chains (in R >4.4, they are now using `|>` pipes instead, but we'll leave it for backward compatibility)
+The bulk of the processing can be done in rapid succession, with linking `|>` chains (in R >4.4, they are now using `|>` pipes instead, but we'll leave it for backward compatibility)
 
 
 ```{r, sc_process, message = FALSE, warning = FALSE}
@@ -127,38 +128,38 @@ if (integ) {
   sc[["RNA"]] <- split(sc[["RNA"]], f = sc@meta.data[[g_col]])
 
   # Prep & PCA on each group
-  sc %>%
-    NormalizeData() %>%
-    FindVariableFeatures() %>%
-    ScaleData(vars.to.regress = c("Donor.ID", "Sex", "Age.at.Death")) %>%
-    RunPCA(npcs = pcs) %>%
-    RunUMAP(dims = 1:pcs, reduction.name = "umap") %>%
+  sc |>
+    NormalizeData() |>
+    FindVariableFeatures() |>
+    ScaleData(vars.to.regress = c("Donor.ID", "Sex", "Age.at.Death")) |>
+    RunPCA(npcs = pcs) |>
+    RunUMAP(dims = 1:pcs, reduction.name = "umap") |>
 
     # feature selection and integration prep
     IntegrateLayers(
       method = HarmonyIntegration,
       new.reduction = "harmony",
       verbose = TRUE
-    ) %>%
+    ) |>
     RunUMAP(
       dims = 1:pcs, 
       reduction = "harmony", 
       reduction.name = "umap.harmony"
-    ) %>%
-    FindNeighbors(reduction = "harmony", dims = 1:pcs) %>%
-    FindClusters(resolution = resi) %>%
+    ) |>
+    FindNeighbors(reduction = "harmony", dims = 1:pcs) |>
+    FindClusters(resolution = resi) |>
 
     # combine again
     JoinLayers() -> sc
 
 } else { # otherwise, ignore integration
-  sc %>%
-    NormalizeData() %>%
-    FindVariableFeatures() %>%
-    ScaleData(vars.to.regress = c("Donor.ID")) %>%
-    RunPCA(npcs = pcs) %>%
-    FindNeighbors(dims = 1:pcs) %>%
-    FindClusters() %>%
+  sc |>
+    NormalizeData() |>
+    FindVariableFeatures() |>
+    ScaleData(vars.to.regress = c("Donor.ID")) |>
+    RunPCA(npcs = pcs) |>
+    FindNeighbors(dims = 1:pcs) |>
+    FindClusters() |>
     RunUMAP(dims = 1:pcs) -> sc
 } 
 
@@ -316,7 +317,7 @@ The [most robust](https://satijalab.org/seurat/articles/de_vignette#perform-de-a
 #       group.by = group,
 #       subset.ident = i,
 #       latent.vars = c("Sex", "Age.at.Death"),
-#       test.use = "DESeq2"
+#       test.use = "negbinom"
 #     ),
 #     keep.rownames = TRUE
 #   )
@@ -581,13 +582,13 @@ This data has already been cleaned/filtered a fair bit by the SEA-AD group, but 
 
 
 ```{r, spat_filter_norm}
-gobj %>% 
+gobj |> 
   # filter out cells with too few features, or features in too few cells
-  filterGiotto(feat_det_in_min_cells = 5, min_det_feats_per_cell = 5) %>%
+  filterGiotto(feat_det_in_min_cells = 5, min_det_feats_per_cell = 5) |>
   # normalize using scale factor (depends on the technology)
-  normalizeGiotto(scalefactor = 10000, verbose = TRUE) %>%
+  normalizeGiotto(scalefactor = 10000, verbose = TRUE) |>
   # calculate feature and cell statistics on normalized data
-  addStatistics(expression_values = "normalized") %>%
+  addStatistics(expression_values = "normalized") |>
   # with MERSCOPE there are very few genes, so we specify highly variable features to use
   calculateHVF(method = "var_p_resid", var_number = 120, show_plot = TRUE) -> gobj
 
@@ -601,13 +602,13 @@ Now that our normalized data is ready, lets make some clusters in the spatial st
 
 
 ```{r, spat_cluster}
-gobj %>% 
-  runPCA() %>%
-  # screePlot() %>% # with this few genes, 8 pcs is sufficient
+gobj |> 
+  runPCA() |>
+  # screePlot() |> # with this few genes, 8 pcs is sufficient
   runGiottoHarmony(
     vars_use = g_col,
     dimensions_to_use = 1:pcs,
-  ) %>%
+  ) |>
   runUMAP(
     dim_reduction_name = "harmony", 
     dim_reduction_to_use = "harmony",
@@ -621,9 +622,9 @@ When clustering with spatial data, we can actually incorporate spatial informati
 
 
 ```{r, spat_network}
-gobj %>%
+gobj |>
   # Create a sNN network (default)
-  createNearestNetwork(dimensions_to_use = 1:pcs, k = 15) %>%
+  createNearestNetwork(dimensions_to_use = 1:pcs, k = 15) |>
   # Perform clustering
   doLeidenCluster(resolution = resi, name = paste0("leiden_", resi)) -> gobj
 
@@ -721,8 +722,8 @@ gobjs <- splitGiotto(gobj, by = g_col)
 
 # We have to create a spatial network for each slide based on physical distance of cell centroids
 gobjs <- lapply(gobjs, function(i) {
-  i %>%
-    createSpatialNetwork() %>%
+  i |>
+    createSpatialNetwork() |>
     createSpatialGrid(
       sdimx_stepsize = 500, 
       sdimy_stepsize = 500, 
