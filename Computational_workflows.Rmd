@@ -49,13 +49,13 @@ library(limma)
 # we will be working out of the data folder
 data_path <- ("/sbgenomics/project-files/sc-spatial/2_sc_spatial_Butler")
 # data_path <- getwd()
-cavatica <- TRUE
+cavatica <- FALSE
 
 # little bit of prep
 if (cavatica) {
   # Create symlink to make it appear in default location
   system("mkdir -p ~/.local/share/r-miniconda/envs/")
-  system("tar -xzf /sbgenomics/project-files/giotto_env.tar.gz -C ~/.local/share/r-miniconda/envs/")
+  system("tar -xzf /sbgenomics/project-files/data/giotto_env.tar.gz -C ~/.local/share/r-miniconda/envs/")
 }
 
 # Functions ------------------------------------------------------------
