@@ -52,7 +52,11 @@ data_path <- ("/sbgenomics/project-files/sc-spatial/2_sc_spatial_Butler")
 cavatica <- TRUE
 
 # little bit of prep
-if (cavatica) installGiottoEnvironment()
+if (cavatica) {
+  # Create symlink to make it appear in default location
+  system("mkdir -p ~/.local/share/r-miniconda/envs/")
+  system("tar -xzf /sbgenomics/project-files/giotto_env.tar.gz -C ~/.local/share/r-miniconda/envs/")
+}
 
 # Functions ------------------------------------------------------------
 #' Generalized linear model based on a flexible formula
@@ -1333,7 +1337,8 @@ Important to remember, we looked at only the top markers, from a MERFISH panel s
 Before we wrap up, let's clean up the environment to help Cavatica shut down
 ```{r, kill_it_with_fire, include = FALSE}
 if (cavatica) {
-  system("rm -rf ~/.local/share/r-miniconda")
+  system("rm -rf ~/.local/share/r-miniconda/envs")
+  # system("rm -rf .singularity .local .config .conda .cache .azenta_transfer")
 }
 
 ```
