@@ -48,11 +48,12 @@ library(limma)
 
 # we will be working out of these folders
 data_path <- "/sbgenomics/project-files/sc-spatial/data"
-out_path <- "/sbgenomics/output-files" # where to save your files
 # data_path <- getwd()
+out_path <- "/sbgenomics/output-files" # where to save your files
+# out_path <- "."
 
 # cavatica requires a little magic to run giotto 
-cavatica <- TRUE
+cavatica <- FALSE
 envs_path <- ("~/.local/share/r-miniconda/envs")
 
 # little bit of prep
@@ -177,7 +178,9 @@ if (integ) {
 } 
 
 # # Save progress
-# saveRDS(sc, file = "SEAAD_MTG_RNAseq_final-nuclei.2k_demo.rds")
+# saveRDS(sc, 
+#   file = file.path(out_path, "SEAAD_MTG_RNAseq_final-nuclei.2k_demo.rds")
+# )
 # sc <- readRDS(
 #   file.path(data_path, "SEAAD_MTG_RNAseq_final-nuclei.2k_demo.rds")
 # )
@@ -282,7 +285,9 @@ setnames(de, "rn", "Symbol")
 de[p_val_adj < 0.05, .N, by = Subclass]
 
 # # Let's save it
-# fwrite(de, file = "SEAAD_MTG_RNAseq_final-nuclei.2k_demo.ad_vs_ctrl.txt.gz")
+# fwrite(de, 
+#   file = file.path(out_path, "SEAAD_MTG_RNAseq_final-nuclei.2k_demo.ad_vs_ctrl.txt.gz")
+# )
 de <- fread(
   file.path(data_path, "SEAAD_MTG_RNAseq_final-nuclei.2k_demo.ad_vs_ctrl.txt.gz")
 )
@@ -471,7 +476,6 @@ resi <- 0.4
 
 
 # lets load in our giotto datasets
-set_giotto_python_path()
 gobj <- loadGiotto(
   file.path(data_path, "SEAAD_MTG_MERFISH.2024-12-11.giotto_obj")
 )
@@ -501,7 +505,7 @@ instructions(gobj)
 # Lets update those
 instructions(gobj, 
   param = c("save_dir", "save_plot", "return_plot")
-) <- list(getwd(), FALSE, TRUE)
+) <- list(out_path, FALSE, TRUE)
 
 ```
 
@@ -695,6 +699,7 @@ From this point on, we can also save the Giotto objects, as we won't be modifyin
 
 ```{r, save_giotto}
 # saveGiotto(gobj,
+#   dir = out_path,
 #   foldername = "SEAAD_MTG_MERFISH.2024-12-11.giotto_obj",
 #   method = 'qs',
 #   overwrite = FALSE
@@ -772,7 +777,9 @@ Now we can find spatially organized gene expression by examining the binarized e
 spat_feats <- lapply(gobjs, binSpect)
 spat_feats <- rbindlist(spat_feats, idcol = g_col)
 spat_feats <- spat_feats[!feats %like% "Blank"]
-# fwrite(spat_feats, file = "SEAAD_MTG_MERFISH.2024-12-11.spat_feats_raw.txt.gz")
+# fwrite(spat_feats, 
+#   file = file.path(out_path, "SEAAD_MTG_MERFISH.2024-12-11.spat_feats_raw.txt.gz")
+# )
 # spat_feats <- fread(
 #   file.path(data_path, "SEAAD_MTG_MERFISH.2024-12-11.spat_feats_raw.txt.gz")
 # )
@@ -856,7 +863,9 @@ spat_lm <- as.data.table(
 # merge with aggregate spatial scores
 spat_lm <- merge(spat_lm, agg, by.x = 'feats', by.y = 'Name')
 setorder(spat_lm, adj.P.Val, P.Value)
-fwrite(spat_lm, file = "SEAAD_MTG_MERFISH.2024-12-11.spat_feats_agg.txt.gz")
+fwrite(spat_lm, 
+  file = file.path(out_path, "SEAAD_MTG_MERFISH.2024-12-11.spat_feats_agg.txt.gz")
+)
 # spat_lm <- fread(
 #   file.path(data_path, "SEAAD_MTG_MERFISH.2024-12-11.spat_feats_agg.txt.gz")
 # )
@@ -906,7 +915,9 @@ cell_prox <- lapply(gobjs, cellProximityEnrichment,
   cluster_column = "Subclass",
   adjust_method = "fdr"
 )
-# saveRDS(cell_prox, file = "SEAAD_MTG_MERFISH.2024-12-11.cell_prox_raw.rds")
+# saveRDS(cell_prox, 
+#   file = file.path(out_path, "SEAAD_MTG_MERFISH.2024-12-11.cell_prox_raw.rds")
+# )
 # cell_prox <- readRDS(
 #   file.path(data_path, "SEAAD_MTG_MERFISH.2024-12-11.cell_prox_raw.rds")
 # )
@@ -1030,7 +1041,9 @@ prox_lm[, unified_int := gsub(".", " ", unified_int, fixed = TRUE)]
 # merge with aggregate spatial scores
 prox_lm <- merge(prox_lm, agg, by = 'unified_int')
 setorder(prox_lm, padj, p)
-# fwrite(prox_lm, file = "SEAAD_MTG_MERFISH.2024-12-11.cell_prox_agg.txt.gz")
+# fwrite(prox_lm, 
+#   file = file.path(out_path, "SEAAD_MTG_MERFISH.2024-12-11.cell_prox_agg.txt.gz")
+# )
 # prox_lm <- fread(
 #   file.path(data_path, "SEAAD_MTG_MERFISH.2024-12-11.cell_prox_agg.txt.gz")
 # )
@@ -1149,7 +1162,9 @@ plan("multisession", workers = 8)
 #   nr_permutations = 10,
 #   do_parallel = TRUE
 # )
-# saveRDS(ICFs, file = "SEAAD_MTG_MERFISH.2024-12-11.icf_raw.rds")
+# saveRDS(ICFs, 
+#   file = file.path(out_path, "SEAAD_MTG_MERFISH.2024-12-11.icf_raw.rds")
+# )
 ICFs <- readRDS(
   file.path(data_path, "SEAAD_MTG_MERFISH.2024-12-11.icf_raw.rds")
 )
@@ -1271,7 +1286,9 @@ icf_lm[, feat_by_int := gsub(".", " ", feat_by_int, fixed = TRUE)]
 # merge with aggregate spatial scores
 icf_lm <- merge(icf_lm, agg, by = 'feat_by_int')
 setorder(icf_lm, padj, p)
-# fwrite(icf_lm, file = "SEAAD_MTG_MERFISH.2024-12-11.icf_agg.txt.gz")
+# fwrite(icf_lm, 
+#   file = file.path(out_path, "SEAAD_MTG_MERFISH.2024-12-11.icf_agg.txt.gz")
+# )
 # icf_lm <- fread(
 #   file.path(data_path, "SEAAD_MTG_MERFISH.2024-12-11.icf_agg.txt.gz")
 # )
