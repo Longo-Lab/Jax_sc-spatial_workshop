@@ -46,17 +46,26 @@ library(RobustRankAggreg)
 library(limma)
 # library(liana)
 
-# we will be working out of the data folder
-data_path <- ("/sbgenomics/project-files/sc-spatial/2_sc_spatial_Butler")
+# we will be working out of these folders
+data_path <- "/sbgenomics/project-files/sc-spatial/data"
+out_path <- "/sbgenomics/output-files" # where to save your files
 # data_path <- getwd()
-cavatica <- FALSE
+
+# cavatica requires a little magic to run giotto 
+cavatica <- TRUE
+envs_path <- ("~/.local/share/r-miniconda/envs")
 
 # little bit of prep
-if (cavatica) {
-  # Create symlink to make it appear in default location
-  system("mkdir -p ~/.local/share/r-miniconda/envs/")
-  system("tar -xzf /sbgenomics/project-files/data/giotto_env.tar.gz -C ~/.local/share/r-miniconda/envs/")
+if (cavatica & !file.exists(file.path(envs_path, "giotto_env/bin/python"))) {
+  Sys.setenv(CONDA_PLUGINS_AUTO_ACCEPT_TOS = "yes")
+  installGiottoEnvironment()
+  #
+  # # If build fails, we can copy a compressed conda environment
+  # dir.create(envs_path, recursive = TRUE)
+  # system(paste0("tar -xzf ", data_path, "/giotto_env.tar.gz -C ~/"))
+  # # set_giotto_python_path() # this is likely not necessary
 }
+
 
 # Functions ------------------------------------------------------------
 #' Generalized linear model based on a flexible formula
@@ -1337,7 +1346,7 @@ Important to remember, we looked at only the top markers, from a MERFISH panel s
 Before we wrap up, let's clean up the environment to help Cavatica shut down
 ```{r, kill_it_with_fire, include = FALSE}
 if (cavatica) {
-  system("rm -rf ~/.local/share/r-miniconda/envs")
+  system("rm -rf ~/.local/share/r-miniconda .conda .anaconda .cache")
   # system("rm -rf .singularity .local .config .conda .cache .azenta_transfer")
 }
 
