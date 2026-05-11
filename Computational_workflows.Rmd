@@ -46,25 +46,24 @@ library(RobustRankAggreg)
 library(limma)
 # library(liana)
 
-# we will be working out of these folders
-data_path <- "/sbgenomics/project-files/sc-spatial/data"
-# data_path <- getwd()
-out_path <- "/sbgenomics/output-files" # where to save your files
-# out_path <- "."
-
 # cavatica requires a little magic to run giotto 
-cavatica <- FALSE
-envs_path <- ("~/.local/share/r-miniconda/envs")
+cavatica <- TRUE
 
-# little bit of prep
-if (cavatica & !file.exists(file.path(envs_path, "giotto_env/bin/python"))) {
+# little bit of prep for file paths and a cloud environment
+if (cavatica) {
+  # we will be working out of these folders
+  data_path <- "/sbgenomics/project-files/sc-spatial/data"
+  out_path <- "/sbgenomics/output-files" # where to save your files or cavatica explodes
+  conda_path <- "/tmp/r-miniconda"
+  
+  # set up the environment
   Sys.setenv(CONDA_PLUGINS_AUTO_ACCEPT_TOS = "yes")
-  installGiottoEnvironment()
-  #
-  # # If build fails, we can copy a compressed conda environment
-  # dir.create(envs_path, recursive = TRUE)
-  # system(paste0("tar -xzf ", data_path, "/giotto_env.tar.gz -C ~/"))
-  # # set_giotto_python_path() # this is likely not necessary
+  Sys.setenv(RETICULATE_MINICONDA_PATH = conda_path)
+  installGiottoEnvironment(mini_install_path = conda_path, confirm = FALSE)
+} else {
+  # we will be working out of these folders (change if required)
+  data_path <- getwd()
+  out_path <- getwd()
 }
 
 
@@ -863,9 +862,9 @@ spat_lm <- as.data.table(
 # merge with aggregate spatial scores
 spat_lm <- merge(spat_lm, agg, by.x = 'feats', by.y = 'Name')
 setorder(spat_lm, adj.P.Val, P.Value)
-fwrite(spat_lm, 
-  file = file.path(out_path, "SEAAD_MTG_MERFISH.2024-12-11.spat_feats_agg.txt.gz")
-)
+# fwrite(spat_lm, 
+#   file = file.path(out_path, "SEAAD_MTG_MERFISH.2024-12-11.spat_feats_agg.txt.gz")
+# )
 # spat_lm <- fread(
 #   file.path(data_path, "SEAAD_MTG_MERFISH.2024-12-11.spat_feats_agg.txt.gz")
 # )
@@ -1363,8 +1362,8 @@ Important to remember, we looked at only the top markers, from a MERFISH panel s
 Before we wrap up, let's clean up the environment to help Cavatica shut down
 ```{r, kill_it_with_fire, include = FALSE}
 if (cavatica) {
-  system("rm -rf ~/.local/share/r-miniconda .conda .anaconda .cache")
-  # system("rm -rf .singularity .local .config .conda .cache .azenta_transfer")
+  system("rm -rf ~/.conda ~/.anaconda ~/.cache")
+  # system("rm -rf ~/.singularity ~/.local ~/.config ~/.conda ~/.cache ~/.azenta_transfer")
 }
 
 ```
