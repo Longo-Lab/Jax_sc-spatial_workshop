@@ -211,7 +211,7 @@ if (integ) {
 Generally, not a lot of improvement, the sequencing pipeline the Allen Inst. used seemed to be pretty consistent across donors.
 
 
-## Cell type annotations (maybe link MapMyCells)
+## Cell type annotations
 Cell type identification is a class unto itself. Usually good methods involve a mix of automated cell type predictions, followed by careful curation to:
 
 1. Verify cell type predictions & consolidate them across clusters
