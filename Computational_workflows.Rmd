@@ -47,7 +47,7 @@ library(limma)
 # library(liana)
 
 # cavatica requires a little magic to run giotto 
-cavatica <- TRUE
+cavatica <- FALSE
 
 # little bit of prep for file paths and a cloud environment
 if (cavatica) {
@@ -400,10 +400,14 @@ wrap_plots(plist) + plot_layout(guides = 'collect')
 
 
 # Introduction spatial (lecture)
-So, spatial transcritomics is any of several technologies that can put spatial coordinates on RNA data. RIght now there are at least a dozen different platforms, and that is just in the RNA space.
+So, spatial transcritomics is any of several technologies that can put spatial coordinates on RNA data. Right now there are at least a dozen different platforms, and that is just in the RNA space. 
 
 
-Previously Dr. McClatchy taught a very good workshop on the first generation of spatial data, using spot based sequencing. [read the tutorial](https://smcclatchy.github.io/spatial-transcriptomics/introduction.html) 
+Today we are going to focus on conceptual ideas in spatial, and how to apply them specifically to comparative models of disease (and drug) effects.
+
+
+Dr. McClatchy taught a very good workshop on the first generation of spatial data, using spot based sequencing. [read the tutorial](https://smcclatchy.github.io/spatial-transcriptomics/introduction.html) 
+She, Dan Skelly, and Sergii Domanskyi also run a multiomics demo on multiple spatial data types looking at senescent lung cells in the Jax multiomics course using [sennet](https://github.com/TheJacksonLaboratory/sennet-demo)
 
 
 > What are some approaches to capturing spatial data?
@@ -485,7 +489,7 @@ gobj <- loadGiotto(
 ## Check-in
 Giotto it is based on the [terra](https://rspatial.github.io/terra/index.html) spatial data package, and makes for objects that can store many different [types](https://drieslab.github.io/Giotto_website/articles/structure.html#giotto-object-structure) of information:
 
-![Giotto](https://drieslab.github.io/Giotto_website/articles/images/ecosystem/modules.png)
+![Giotto](https://giottosuite.com/articles/images/ecosystem/modules.png)
 
 
 So we can examine the Giotto object in detail to figure out the format.
@@ -1351,9 +1355,9 @@ de[Symbol == "RORB"][order(p_val_adj, p_val)]
 
 ```
 
-That presents a pretty good preliminary finding that RORB in L2/3 IT cells is increasing in ad, specifically in the presence of Parvalbumin GABAergic neurons. It doesn't seem to be coming from the Pvalb cells themselves, as they significantly **downregulate** RORB in a non-spatial manner. Be careful assigning causality here, a lot more molucular work would be needed to verify. 
+That presents a pretty good preliminary finding that RORB in L2/3 IT cells is increasing in ad, specifically in the presence of Parvalbumin GABAergic neurons. It doesn't seem to be coming from the Pvalb cells themselves, as they significantly **downregulate** RORB in a non-spatial manner. Be careful assigning causality here, a lot more molecular work would be needed to verify. 
 
-Important to remember, we looked at only the top markers, from a MERFISH panel specifically of cell type markers. Other spatial transcriptomic panels.
+Important to remember, we looked at only the top markers, from a MERFISH panel specifically of cell type markers. Other spatial transcriptomic panels can capture more or particular gene sets of interest, so for right now, knowing your targets is still very helpful. Xenium has a 5k gene panel, and CosMx has whole transcriptome human. But it could be a while before a truly robust full spatial transcriptome is fully developed. For the next section, we look at what you can do with the 1k Mouse Neuroscience panel from CosMx.
 
 
 
