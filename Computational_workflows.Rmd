@@ -407,6 +407,7 @@ Today we are going to focus on conceptual ideas in spatial, and how to apply the
 
 
 Dr. McClatchy taught a very good workshop on the first generation of spatial data, using spot based sequencing. [read the tutorial](https://smcclatchy.github.io/spatial-transcriptomics/introduction.html) 
+
 She, Dan Skelly, and Sergii Domanskyi also run a multiomics demo on multiple spatial data types looking at senescent lung cells in the Jax multiomics course using [sennet](https://github.com/TheJacksonLaboratory/sennet-demo)
 
 
@@ -416,7 +417,7 @@ She, Dan Skelly, and Sergii Domanskyi also run a multiomics demo on multiple spa
 The 30 second breakdown for major classes of spatial transcriptomics:
 
 1. Spot-based sequencing across a slide, followed by sequencing
-![https://commons.wikimedia.org/wiki/File:Spatial_transcriptomics_ii.png](https://upload.wikimedia.org/wikipedia/commons/1/14/Spatial_transcriptomics_ii.png)
+![https://commons.wikimedia.org/wiki/File:Spatial_transcriptomics_ii.png](img/Spatial_transcriptomics_ii.png)
 
 2. Probe-based imaging using serial washes of probes and imaging
 ![https://nanostring.com/products/cosmx-spatial-molecular-imager/single-cell-imaging-overview/](https://raw.githubusercontent.com/Longo-Lab/2025_Jax_workshop/refs/heads/main/img/cosmx_method.png)
@@ -519,20 +520,6 @@ We can see that "features" is not limited to RNA, but can be multimodal. There a
 > What other types of polygons might fit in the spat_unit slot?
 
 
-```{r, get_spat_metadata}
-
-# finally, we are going to pull out some sample metadata for later
-meta <- pDataDT(gobj)
-meta <- unique(meta[, .(`Donor ID`, Group, Sex, `Age at Death`, `Continuous Pseudo-progression Score`)])
-setnames(meta, "Continuous Pseudo-progression Score", "Pseudo_prog")
-meta$`Donor ID` <- factor(meta$`Donor ID`, levels = meta$`Donor ID`)
-meta[`Donor ID` == "H21.33.015", `Age at Death` := "98"]
-meta$`Age at Death` <- as.integer(as.character(meta$`Age at Death`))
-meta
-
-```
-
-
 Probe based spatial technologies allow exact RNA positioning, and immunostained images to be underlayed behind your cell `spat_unit` labels, for very cool images at real sub-cellular resolution!
 
 
@@ -552,7 +539,22 @@ spatInSituPlotPoints(g,
 
 Sadly, our MERFISH data will limit RNA counts to the cell level, where each point is a cell with ~ 180 gene expression values.
 
+
 Rather than use all 12 donors for this example, we have the three matched `ad` and `ctrl` samples (as best as we can) with strong differential pseudo-progression scores and `Overall Neuropathological Change`. To get these from the overall dataset takes some work, but for now lets examine how they look in space. 
+
+```{r, get_spat_metadata}
+
+# finally, we are going to pull out some sample metadata for later
+meta <- pDataDT(gobj)
+meta <- unique(meta[, .(`Donor ID`, Group, Sex, `Age at Death`, `Continuous Pseudo-progression Score`)])
+setnames(meta, "Continuous Pseudo-progression Score", "Pseudo_prog")
+meta$`Donor ID` <- factor(meta$`Donor ID`, levels = meta$`Donor ID`)
+meta[`Donor ID` == "H21.33.015", `Age at Death` := "98"]
+meta$`Age at Death` <- as.integer(as.character(meta$`Age at Death`))
+meta
+
+```
+
 
 > Do you see any notable spatial features?  
 
